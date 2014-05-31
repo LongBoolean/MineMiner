@@ -52,7 +52,7 @@ Game Modes:
 
 */
 
-Tile grid[30][30];
+Tile grid[20][20];
 
 
 void main(int argc, char** argv)
@@ -60,23 +60,22 @@ void main(int argc, char** argv)
 	//setup file locations
 	strcpy(file_loc_conf,"../conf/mineminer.conf");
 	strcpy(file_loc_save,"../conf/save.mmg");
-	//export test
-	exportFile(file_loc_save);
-	/*start testing*/
-	currentState = PENDING;
-	showflags = true;
+
+	currentState = NEW;
+	showflags = 1;
 	printf("\nMine Miner\n");
 	if(argc < 2)
 	{
 		printf("Please use --help for instructions.\n");
 	}
-	generate();
 	int i;
 	int selectX;
 	int selectY;
 	char selectC;
 	//pre arguments
-	bool keepgoing = true;
+	int keepgoing = 1;
+	int final_import = 1;
+	int inital_import = 1;
 	for(i=0; i<argc; i=i+1)
 	{
 		if(argv[i][0] == '-')
@@ -87,23 +86,42 @@ void main(int argc, char** argv)
 					if(argv[i][2] == 'h' && argv[i][3] == 'e' && argv[i][4] == 'l' && argv[i][5] == 'p')
 					{
 						printHelp();
-						keepgoing = false;
+						keepgoing = 0;
 					}
 					else if(argv[i][2] == 'n' && argv[i][3] == 'o' && argv[i][4] == 'f' && argv[i][5] == 'l'&& argv[i][6] == 'a' && argv[i][7] == 'g' && argv[i][8] == 's')
 					{
-						showflags = false;
+						showflags = 0;
 					}
 					else if(argv[i][2] == 'n' && argv[i][3] == 'e' && argv[i][4] == 'w' && argv[i][5] == 'g'&& argv[i][6] == 'a' && argv[i][7] == 'm' && argv[i][8] == 'e')
 					{
-						printf("Not yet implemented\n");
-						keepgoing = false;
+						printf("New Game Created\n");
+						currentState = NEW;
+						numMines = 5;//20*20/16;
+						Ysize = 10;
+						Xsize = 5;
+						keepgoing = 1;
+						final_import = 0;
+						inital_import = 0;
 					}
 					break;
 			}
 		}
 	}
+	//set up the game grid
+	if(keepgoing==1)
+	{
+		if(inital_import==1)
+		{
+			importFile_inital();
+		}
+		generate();
+		if(final_import==1)
+		{
+			importFile_final();
+		}
+	}
 	//other input
-	for(i=0; keepgoing && i<argc; i=i+1)
+	for(i=0; keepgoing==1 && i<argc; i=i+1)
 	{
 		if(argv[i][0] == '-')
 		{
@@ -128,28 +146,187 @@ void main(int argc, char** argv)
 					break;
 				default:
 					printf("Invallid argument %s\n",argv[i]);
+			} 
+		} 
+	} /*end testing*/ 
+
+	//export test
+	if(keepgoing)
+		exportFile(file_loc_save);
+} 
+
+int importFile_inital() 
+{ 
+	FILE *rf_save = NULL; 
+	rf_save = fopen(file_loc_save, "r");
+	if(rf_save == NULL)
+		return 0;
+	//read file line by line
+	int max_line_length = 512;
+	char lineBuffer [max_line_length];
+	int count = 0;
+	int tempInt = 0;
+	while(fgets(lineBuffer, max_line_length, rf_save) != NULL)
+	{
+		if(lineBuffer[0] != '#')
+		{
+			switch(count)
+			{
+				case 0: //import gamestate
+					sscanf(lineBuffer, "%d", &tempInt);
+					if(currentState == PENDING)
+						currentState = tempInt;
+					printf("%d\n",currentState);
+					count++;
+					break;
+				case 1: //import seed
+					sscanf(lineBuffer, "%d", &randSeed);
+					printf("%d\n",randSeed);
+					count++;
+					break;
+				case 2: //import grid size x y 
+					sscanf(lineBuffer, "%d %d", &Xsize, &Ysize);
+					printf("%d %d\n",Xsize, Ysize);
+					count++;
+					break;
+				case 3: //import lostX and lostY
+					sscanf(lineBuffer, "%d %d", &lostX, &lostY);
+					printf("%d %d\n",lostX, lostY);
+					count++;
+					break;
+				case 4: //import num mines
+					sscanf(lineBuffer, "%d", &numMines);
+					printf("%d\n", numMines);
+					count++;
+					break;
+				default:
+					break;
 			}
+
 		}
 	}
-	/*end testing*/
+
+	fclose(rf_save);
+	return 1; 
 }
-bool importFile()
-{
-	FILE *rf_save;
-	return false;
+
+int importFile_final() 
+{ 
+	FILE *rf_save = NULL; 
+	rf_save = fopen(file_loc_save, "r");
+	if(rf_save == NULL)
+		return 0;
+	//read file line by line
+	int max_line_length = 512;
+	char lineBuffer [max_line_length];
+	int count = 0;
+	int i = 0;
+	while(fgets(lineBuffer, max_line_length, rf_save) != NULL)
+	{
+		if(lineBuffer[0] != '#')
+		{
+			switch(count)
+			{
+				case 5: //import covered tiles
+					; //an empty statement needed to compile. C can be weird at times
+					i = 0;
+					do
+					{
+						int j;
+						for(j=0;j<Xsize;j++)
+						{
+							if(lineBuffer[j]=='0')
+								uncoverTile(j, i);
+							printf("%c", lineBuffer[j]);
+						}
+						printf("\n");
+						i++;
+					}
+					while (i<Ysize && fgets(lineBuffer, max_line_length, rf_save) != NULL);
+					count++;
+					printf("/////////////////////////////////\n");
+					break;
+				case 6://import flagged tiles
+					; //an empty statement needed to compile. C can be weird at times
+					i = 0;
+					do
+					{
+						int j;
+						for(j=0;j<Xsize;j++)
+						{
+							if(lineBuffer[j]!='-')
+								flagTile(j, i,lineBuffer[j]);
+							printf("%c", lineBuffer[j]);
+						}
+						printf("\n");
+						i++;
+					}
+					while(i<Ysize && fgets(lineBuffer, max_line_length, rf_save) != NULL);
+					count++;
+					break;
+				default:
+					//			printf("lol Im here %d\n", count);
+					count++;
+					break;
+			}
+
+		}
+	}
+
+	fclose(rf_save);
+	return 1; 
 }
-bool exportFile()
+
+int exportFile()
 {
 	FILE *wf_save;
 	wf_save = fopen(file_loc_save, "w");
-	fprintf(wf_save,"#MineMiner Save File");
-	fprintf(wf_save,"#If you edit this file the program will likly become buggy and all bets are off");
+	fprintf(wf_save,"#MineMiner Save File\n");
+	fprintf(wf_save,"#If you edit this file the program will likly become buggy and all bets are off\n");
 	//export gamestate pending = 0, new = 1, won = 2, lost = 3
+	fprintf(wf_save,"%d\n", currentState);
+	//export random seed
+	fprintf(wf_save,"%d\n", randSeed);
 	//export grid size x and y
+	fprintf(wf_save,"%d %d\n", Xsize, Ysize);
 	//export lostX lostY
+	fprintf(wf_save,"%d %d\n", lostX, lostY);
+	//export numMines
+	fprintf(wf_save,"%d\n", numMines);
+	//export covered tiles
+	int i = 0; 
+	int j = 0;
+	for(i=0;i < Ysize; i=i+1)
+	{
+		for(j=0;j < Xsize; j=j+1)
+		{
+			if(grid[i][j].covered)
+				fprintf(wf_save,"%d", 1);
+			else
+				fprintf(wf_save,"%d", 0);
+		}
+		fprintf(wf_save,"\n");
+	}
+
+	//export flaged tiles
+	i = 0; 
+	j = 0;
+	for(i=0;i < Ysize; i=i+1)
+	{
+		for(j=0;j < Xsize; j=j+1)
+		{
+
+			if(grid[i][j].flag == ' ')
+				fprintf(wf_save,"%c", '-');
+			else
+				fprintf(wf_save,"%c", grid[i][j].flag);
+		}
+		fprintf(wf_save,"\n");
+	}
+
 
 	fclose(wf_save);
-	return true;
+	return 1;
 }
 void generate()
 {
@@ -165,18 +342,23 @@ void init()
 	{
 		for(j=0;j < Xsize; j=j+1)
 		{
-			grid[i][j].covered = true;
+			grid[i][j].covered = 1;
 			grid[i][j].flag = ' ';
-			grid[i][j].mined = false;
+			grid[i][j].mined = 0;
 			grid[i][j].number = 0;
-			
+
 		}
 	}
-	
+
 }
 void placeMines(int numMines)
 {
-	srand((unsigned int)time(NULL));
+	if(currentState == NEW)
+	{
+		randSeed = (unsigned int) time(NULL);
+		currentState = PENDING;
+	}
+	srand(randSeed);
 	int x = 0;
 	int y = 0;
 	int i;
@@ -184,9 +366,9 @@ void placeMines(int numMines)
 	{
 		x = rand() % Xsize;
 		y = rand() % Ysize;
-		if(grid[y][x].mined == false)
+		if(grid[y][x].mined == 0)
 		{
-			grid[y][x].mined = true;
+			grid[y][x].mined = 1;
 			i=i+1;
 		} 
 	}
@@ -255,10 +437,11 @@ void uncoverTile(int x, int y)
 {
 	if(x<Xsize && x>=0 && y<Ysize && y>=0)
 	{
+		printf("Uncover Tile %d %d \n", x, y);
 		if(currentState != LOST)
 		{
-			grid[y][x].covered = false;
-			if(grid[y][x].mined == true)
+			grid[y][x].covered = 0;
+			if(grid[y][x].mined == 1)
 			{
 				currentState = LOST;
 				lostX = x;
@@ -306,7 +489,7 @@ void uncoverTile(int x, int y)
 	}
 	else
 	{
-		printf("\nUncover Error: Coordinates out of bounds error.\n");
+		printf("\nUncover Error: Coordinates out of bounds error. x:%d y:%d\n", x, y);
 	}
 }
 void checkWon()
@@ -333,32 +516,32 @@ void checkWon()
 void printHelp()
 {
 	printf("Mine Miner Help\n"
-	"Note: This game is not yet completed.\n"
-	"Note: Some arguments listed do not work at the moment.\n"
-	"start a new game\n"
-		"\t$ mm --newgame\n"
-		"\tor\n"
+			"Note: This game is not yet completed.\n"
+			"Note: Some arguments listed do not work at the moment.\n"
+			"start a new game\n"
+			"\t$ mm --newgame\n"
+			"\tor\n"
 
-		"\t$ mm --newgame x y \n"
-		"\tor\n"
-		"\t$ mm --newgame x y mines\n"
-		"\tor\n"
-		"\t$ mm --newgame x y --diff 0,1,2,3-10\n"
-	"print game grid\n"
-		"\t$ mm -p \n"
-		"\tor\n"
-		"\t$ mm -p --noflags\n"
-	"set flag tiles\n"
-		"\t$ mm -f x y\tset or remove flag\n"
-		"\tor\n"
-		"\t$ mm -f x y 'c'\tset flag charactor\n"
-	"uncover tiles\n"
-		"\t$ mm -u x y \n");
+			"\t$ mm --newgame x y \n"
+			"\tor\n"
+			"\t$ mm --newgame x y mines\n"
+			"\tor\n"
+			"\t$ mm --newgame x y --diff 0,1,2,3-10\n"
+			"print game grid\n"
+			"\t$ mm -p \n"
+			"\tor\n"
+			"\t$ mm -p --noflags\n"
+			"set flag tiles\n"
+			"\t$ mm -f x y\tset or remove flag\n"
+			"\tor\n"
+			"\t$ mm -f x y 'c'\tset flag charactor\n"
+			"uncover tiles\n"
+			"\t$ mm -u x y \n");
 }
 void printGameGrid()
 {
 	printf("\nPrint Grid\n");
-	/*set Covered tiles to true */
+	/*set Covered tiles to 1 */
 	int i;
 	int j;
 	int k;
@@ -404,13 +587,13 @@ void printGameGrid()
 		printf("%d# ", i);
 		for(j=0;j < Xsize; j=j+1)
 		{
-			if(grid[i][j].covered == false )
+			if(grid[i][j].covered == 0 )
 			{
 				if(currentState == LOST && lostX == j && lostY == i)
 				{
 					printf("M ");
 				}
-				else if(currentState == LOST && grid[i][j].mined ==true)
+				else if(currentState == LOST && grid[i][j].mined ==1)
 				{
 					printf("m ");
 				}
@@ -423,13 +606,16 @@ void printGameGrid()
 					printf("%d ", grid[i][j].number);
 				}
 			}
-			else if(currentState == LOST && grid[i][j].mined == true)
+			else if(currentState == LOST && grid[i][j].mined == 1)
 			{
 				printf("m ");
 			}
 			else if(showflags && grid[i][j].flag != ' ')
 			{
-				printf("%c ", grid[i][j].flag);
+				if(currentState == LOST && !grid[i][j].mined)
+					printf("%c ", 'X');
+				else
+					printf("%c ", grid[i][j].flag);
 			}
 			else
 			{
@@ -437,6 +623,11 @@ void printGameGrid()
 			}
 		}
 		printf("\n");
+		if(currentState == WON)
+		{
+			printf("Congrats, you uncovered all of the mines.\n");
+		}
+
 	}
 
 }

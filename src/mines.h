@@ -7,26 +7,28 @@ Author: Nicholas A. Peterson (LongBoolean)
 #include <stdio.h>
 typedef struct 
 {
-	bool covered;
+	int covered;
 	char flag;
-	bool mined;
+	int mined;
 	int number;
 }Tile;
 typedef enum {PENDING, NEW, WON, LOST}GameState_t;
 
 char file_loc_conf[100];
 char file_loc_save[100]; 
-static int Ysize = 30;
-static int Xsize = 30;
+unsigned int randSeed = 0;
+static int Ysize = 10;
+static int Xsize = 5;
 int lostX = 0;
 int lostY = 0;
-int numMines = 30*30/4;
+int numMines = 5;//20*20/4;
 GameState_t currentState = PENDING;
-bool showflags;
+int showflags;
 
 void init();
-bool importFile();
-bool exportFile();
+int importFile_inital();
+int importFile_final();
+int exportFile();
 void placeMines(int numMines);
 void calculateNumbers();
 void generate();
