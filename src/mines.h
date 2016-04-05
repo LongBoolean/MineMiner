@@ -1,5 +1,5 @@
 /*
-mines.h
+   mines.h
 Author: Nicholas A. Peterson (LongBoolean)
 */
 #ifndef MINES_H
@@ -7,10 +7,10 @@ Author: Nicholas A. Peterson (LongBoolean)
 #include <stdio.h>
 typedef struct 
 {
-	int covered;
-	char flag;
-	int mined;
-	int number;
+    int covered;
+    char flag;
+    int mined;
+    int number;
 }Tile;
 typedef enum {PENDING, NEW, WON, LOST}GameState_t;
 
@@ -21,7 +21,7 @@ static int Ysize = 10;
 static int Xsize = 5;
 int lostX = 0;
 int lostY = 0;
-int numMines = 5;//20*20/4;
+int numMines = 5;/*20*20/4;*/
 GameState_t currentState = PENDING;
 int showflags;
 
