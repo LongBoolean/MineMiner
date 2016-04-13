@@ -83,10 +83,11 @@ int main(int argc, char** argv)
             switch(argv[i][1])
             {
                 case '-':
+                {
                     if(argv[i][2] == 'h' && 
-                            argv[i][3] == 'e' && 
-                            argv[i][4] == 'l' && 
-                            argv[i][5] == 'p')
+                       argv[i][3] == 'e' && 
+                       argv[i][4] == 'l' && 
+                       argv[i][5] == 'p')
                     {
                         printHelp();
                         keepgoing = 0;
@@ -118,7 +119,7 @@ int main(int argc, char** argv)
                         final_import = 0;
                         inital_import = 0;
                     }
-                    break;
+                } break;
             }
         }
     }
@@ -143,11 +144,14 @@ int main(int argc, char** argv)
             switch(argv[i][1])
             {
                 case 'u':
+                {
                     selectX = atoi(argv[++i]);
                     selectY = atoi(argv[++i]);
                     uncoverTile(selectX,selectY);
-                    break;
+                } break;
+
                 case 'f':
+                {
                     selectX = atoi(argv[++i]);
                     selectY = atoi(argv[++i]);
                     char flag = 'f';
@@ -157,16 +161,22 @@ int main(int argc, char** argv)
                         ++i;
                     }
                     flagTile(selectX,selectY,flag);
-                    break;
+                } break;
 
                 case 'p':
+                {
                     printGameGrid();
-                    break;
+                } break;
+
                 case '-':
+                {
                     //ignore these, they have already been handled
-                    break;
+                }break;
+
                 default:
+                {
                     printf("Invallid argument %s\n",argv[i]);
+                }
             } 
         } 
     } /*end testing*/ 
@@ -195,36 +205,47 @@ int importFile_inital()
             switch(count)
             {
                 case 0: //import gamestate
+                {
                     sscanf(lineBuffer, "%d", &tempInt);
                     //if(tempInt == PENDING)
-                        currentState = tempInt;
+                    currentState = tempInt;
                     //else
-                     //   printf("Creating New Game\n");
+                    //   printf("Creating New Game\n");
                     //printf("GameState: %d\n",currentState);
                     count++;
-                    break;
+                } break;
+
                 case 1: //import seed
+                {
                     sscanf(lineBuffer, "%d", (int*)&randSeed);
                     //printf("ImportSeed: %d\n",randSeed);
                     count++;
-                    break;
+                } break;
+
                 case 2: //import grid size x y 
+                {
                     sscanf(lineBuffer, "%d %d", &Xsize, &Ysize);
                     //printf("Xsize:%d  Ysize:%d\n",Xsize, Ysize);
                     count++;
-                    break;
+                } break;
+
                 case 3: //import lostX and lostY
+                {
                     sscanf(lineBuffer, "%d %d", &lostX, &lostY);
                     //printf("LostX:%d  LostY:%d\n",lostX, lostY);
                     count++;
-                    break;
+                } break;
+
                 case 4: //import num mines
+                {
                     sscanf(lineBuffer, "%d", &numMines);
                     //printf("NumMines: %d\n", numMines);
                     count++;
-                    break;
+                } break;
+
                 default:
-                    break;
+                {
+                }break;
             }
 
         }
@@ -252,6 +273,7 @@ int importFile_final()
             switch(count)
             {
                 case 5: //import covered tiles
+                {
                     i = 0;
                     do
                     {
@@ -268,8 +290,10 @@ int importFile_final()
                     while (i<Ysize && fgets(lineBuffer, max_line_length, rf_save) != NULL);
                     count++;
                     //printf("/////////////////////////////////\n");
-                    break;
+                } break;
+
                 case 6://import flagged tiles
+                {
                     i = 0;
                     do
                     {
@@ -285,11 +309,13 @@ int importFile_final()
                     }
                     while(i<Ysize && fgets(lineBuffer, max_line_length, rf_save) != NULL);
                     count++;
-                    break;
+                } break;
+
                 default:
+                {
                     //			printf("lol Im here %d\n", count);
                     count++;
-                    break;
+                } break;
             }
 
         }
@@ -540,27 +566,27 @@ void checkWon()
 void printHelp()
 {
     printf("Mine Miner Help\n"
-            "Note: This game is not yet completed.\n"
-            "Note: Some arguments listed do not work at the moment.\n"
-            "start a new game\n"
-            "\t$ mm --newgame\n"
-            "\tor\n"
+           "Note: This game is not yet completed.\n"
+           "Note: Some arguments listed do not work at the moment.\n"
+           "start a new game\n"
+           "\t$ mm --newgame\n"
+           "\tor\n"
 
-            "\t$ mm --newgame x y \n"
-            "\tor\n"
-            "\t$ mm --newgame x y mines\n"
-            "\tor\n"
-            "\t$ mm --newgame x y --diff 0,1,2,3-10\n"
-            "print game grid\n"
-            "\t$ mm -p \n"
-            "\tor\n"
-            "\t$ mm -p --noflags\n"
-            "set flag tiles\n"
-            "\t$ mm -f x y\tset or remove flag\n"
-            "\tor\n"
-            "\t$ mm -f x y 'c'\tset flag charactor\n"
-            "uncover tiles\n"
-            "\t$ mm -u x y \n");
+           "\t$ mm --newgame x y \n"
+           "\tor\n"
+           "\t$ mm --newgame x y mines\n"
+           "\tor\n"
+           "\t$ mm --newgame x y --diff 0,1,2,3-10\n"
+           "print game grid\n"
+           "\t$ mm -p \n"
+           "\tor\n"
+           "\t$ mm -p --noflags\n"
+           "set flag tiles\n"
+           "\t$ mm -f x y\tset or remove flag\n"
+           "\tor\n"
+           "\t$ mm -f x y 'c'\tset flag charactor\n"
+           "uncover tiles\n"
+           "\t$ mm -u x y \n");
 }
 void printGameGrid()
 {
